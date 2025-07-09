@@ -49,5 +49,5 @@ enum StreamType {
 }
 
 enum Provider {
-  Google
+  google
 }
