@@ -1,4 +1,4 @@
-import { prismaClient } from "@/lib/db";
+import { prismaClient } from "@/app/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod"
 const YT_REGEX = new RegExp("^https?:\/\/(www\.)?youtube\.com\/watch\?v=[A-Za-z0-9_-]{11}(?:&t=\d+s)?$");
@@ -37,4 +37,17 @@ export async function POST(req: NextRequest){
             status: 411
         })
     }
+}
+
+export async function GET(req: NextRequest){
+    const creatorId = req.nextUrl.searchParams.get("creatorId");
+    const streams = await prismaClient.stream.findMany({
+        where: {
+            userId: creatorId ?? undefined
+        }
+    });
+
+    return NextResponse.json({
+        streams
+    })
 }
