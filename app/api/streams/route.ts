@@ -1,6 +1,8 @@
 import { prismaClient } from "@/app/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod"
+import youtubesearchapi from "youtube-search-api";
+import { GetVideoDetails } from "youtube-search-api";
 const YT_REGEX = new RegExp(/^(?:(?:https?:)?\/\/)?(?:www\.)?(?:m\.)?(?:youtu(?:be)?\.com\/(?:v\/|embed\/|watch(?:\/|\?v=))|youtu\.be\/)((?:\w|-){11})(?:\S+)?$/);
 
 const CreateStreamSchema = z.object({
@@ -21,13 +23,21 @@ export async function POST(req: NextRequest){
         }
 
         const extractedId = data.url.split("v=")[1];
+        const videoDetails = await GetVideoDetails(extractedId);
+        const thumbnails = videoDetails.thumbnail.thumbnails;
+        console.log(thumbnails);
+        thumbnails.sort((a: {width: number}, b: {width: number}) =>  a.width < b.width ? 1 : -1);
+
 
         const stream = await prismaClient.stream.create({
             data: {
                 userId: data.creatorId,
                 url: data.url,
                 extractedId: extractedId,
-                type: "Youtube"
+                type: "Youtube",
+                title: videoDetails.title || "Unknown Title",
+                smallImg: thumbnails[thumbnails.length - 1].url || "https://www.billboard.com/wp-content/uploads/2023/07/SZA-SOS-album-art-billboard-1240.jpg?w=800",
+                largeImg: thumbnails[thumbnails.length - 2].url || "https://www.billboard.com/wp-content/uploads/2023/07/SZA-SOS-album-art-billboard-1240.jpg?w=800",
             }
         })
         return NextResponse.json({
@@ -35,6 +45,7 @@ export async function POST(req: NextRequest){
             id: stream.id
         })
     }catch(e){
+        console.log(e);
         return NextResponse.json({
             message: "Error while adding a stream"
         },{
