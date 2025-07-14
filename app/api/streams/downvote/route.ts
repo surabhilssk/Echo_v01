@@ -14,7 +14,7 @@ export async function POST(req: NextRequest){
 
     const user = await prismaClient.user.findFirst({
         where: {
-            id: session?.user?.id
+            id: session?.token?.sub
         }
     });
     if(!user){

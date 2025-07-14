@@ -19,11 +19,11 @@ export const NEXT_AUTH = {
             clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
         })
     ],
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: "secret",
     callbacks: {
         async session({session, token, user}: any){
-            console.log({session})
-            console.log({token})
+            // console.log({session})
+            // console.log({token})
             session.user.id = token.sub;
             return session;
         },
