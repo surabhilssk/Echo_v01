@@ -7,7 +7,7 @@ export async function GET(req: NextRequest){
     const session = await getServerSession(NEXT_AUTH);
     const user = await prismaClient.user.findFirst({
         where: {
-            id: session?.token?.sub
+            id: session?.user?.id || ""
         }
     });
     if(!user){
@@ -39,7 +39,8 @@ export async function GET(req: NextRequest){
     return NextResponse.json({
         streams: streams.map(({_count, ...rest}) => ({
             ...rest,
-            upvotes: _count.upvotes
+            upvotes: _count.upvotes,
+            haveUpvoted: rest.upvotes.length ? true : false
         }))
     });
     }catch(e){
