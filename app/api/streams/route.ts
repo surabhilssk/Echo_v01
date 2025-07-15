@@ -1,7 +1,6 @@
 import { prismaClient } from "@/app/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod"
-import youtubesearchapi from "youtube-search-api";
 import { GetVideoDetails } from "youtube-search-api";
 const YT_REGEX = new RegExp(/^(?:(?:https?:)?\/\/)?(?:www\.)?(?:m\.)?(?:youtu(?:be)?\.com\/(?:v\/|embed\/|watch(?:\/|\?v=))|youtu\.be\/)((?:\w|-){11})(?:\S+)?$/);
 
@@ -47,7 +46,8 @@ export async function POST(req: NextRequest){
     }catch(e){
         console.log(e);
         return NextResponse.json({
-            message: "Error while adding a stream"
+            message: "Error while adding a stream",
+            error: e
         },{
             status: 411
         })
