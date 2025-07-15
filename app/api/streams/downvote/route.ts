@@ -14,7 +14,7 @@ export async function POST(req: NextRequest){
 
     const user = await prismaClient.user.findFirst({
         where: {
-            id: session?.token?.sub
+            id: session?.data?.user?.id || ""
         }
     });
     if(!user){
@@ -34,6 +34,9 @@ export async function POST(req: NextRequest){
                     streamId: data.streamId
                 }
             }
+        });
+        return NextResponse.json({
+            message: "Downvote successful"
         })
     }catch(e){
         return NextResponse.json({
