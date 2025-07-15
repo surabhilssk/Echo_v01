@@ -22,6 +22,12 @@ export const AppBar = () => {
     }
   }, [session.status, router]);
 
+  const handleLogout = () => {
+    signOut({ redirect: false }).then(() => {
+      router.replace("/"); // Redirect immediately after signOut
+    });
+  };
+
   return (
     <div className="absolute w-full">
       <div className="flex justify-between px-2.5 sm:px-9 py-3 sm:py-4">
@@ -60,7 +66,7 @@ export const AppBar = () => {
                 shimmerColor="wheat"
                 shimmerSize="0rem"
                 className="text-orange-100"
-                onClick={() => signOut()}
+                onClick={handleLogout}
               >
                 Logout
               </ShimmerButton>
