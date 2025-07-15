@@ -1,14 +1,116 @@
+"use client";
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/stateful-button";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { VideoTile } from "./VideoTile";
+import { useSession } from "next-auth/react";
+import { NextResponse } from "next/server";
+import { m } from "motion/react";
 
 export const DashboardComponent = () => {
+  const session = useSession();
+  const [streams, setStreams] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [url, setUrl] = useState("");
+
+  async function handleVote(streamId: string) {
+    try {
+      const stream = streams.find((stream: any) => stream.id === streamId);
+      if (!stream) {
+        return JSON.stringify({
+          message: "Stream not found",
+        });
+      }
+      const endpoint = stream.haveUpvoted
+        ? "/api/streams/downvote"
+        : "/api/streams/upvote";
+      await axios.post(endpoint, {
+        streamId,
+      });
+      setStreams((prevStreams: any) =>
+        prevStreams.map((stream: any) =>
+          stream.id === streamId
+            ? {
+                ...stream,
+                upvotes: stream.haveUpvoted
+                  ? stream.upvotes - 1
+                  : stream.upvotes + 1,
+              }
+            : stream
+        )
+      );
+
+      await refreshStreams();
+      return JSON.stringify({
+        message: "Voting successful",
+      });
+    } catch (e) {
+      return JSON.stringify({
+        message: "Voting failed",
+      });
+    }
+  }
+
+  async function refreshStreams() {
+    try {
+      const response = await axios.get("/api/streams/my", {
+        withCredentials: true,
+      });
+      const sortedStreams = response.data.streams.sort(
+        (a: any, b: any) => b.upvotes - a.upvotes
+      );
+      setStreams(sortedStreams);
+      setLoading(false);
+    } catch (e) {
+      console.log("Error fetching streams");
+    }
+  }
+
+  useEffect(() => {
+    refreshStreams();
+    console.log(streams);
+    const interval = setInterval(() => {}, 10 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div>
-      <div className="grid grid-cols-2 gap-4 h-screen pt-32">
-        <div>
-          <div className="text-2xl font-medium text-orange-100 pl-32">
+      <div className="grid grid-cols-2 gap-4 h-screen pt-28">
+        <div className="ml-28 mb-4">
+          <div className="text-2xl font-medium text-orange-100">
             Upcoming Songs
+          </div>
+          <div className="max-h-[500px] overflow-y-auto hide-scrollbar">
+            {loading === true ? (
+              <div className="text-orange-200 font-medium text-xl text-center mt-56">
+                Loading...
+              </div>
+            ) : (
+              <div>
+                {streams.length > 0 ? (
+                  streams.map((stream: any) => (
+                    <VideoTile
+                      key={stream.id}
+                      title={
+                        stream.title.length > 32
+                          ? stream.title.slice(0, 32) + "..."
+                          : stream.title
+                      }
+                      thumbnail={stream.largeImg}
+                      votes={stream.upvotes}
+                      onClick={() => handleVote(stream.id)}
+                      haveUpvoted={stream.haveUpvoted}
+                    />
+                  ))
+                ) : (
+                  <div className="text-orange-200 font-medium text-xl text-center mt-56">
+                    No upcoming songs
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
         <div className="mr-48">
@@ -16,7 +118,11 @@ export const DashboardComponent = () => {
             <div className="flex flex-col justify-center text-xl text-orange-100">
               Add a song
             </div>
-            <ShimmerButton className="py-2 text-orange-100 px-3.5">
+            <ShimmerButton
+              shimmerSize="0"
+              shimmerDuration="0s"
+              className="py-2 text-orange-100 px-3.5"
+            >
               <div className="flex">
                 <div className="flex flex-col justify-center">
                   <svg
@@ -37,10 +143,40 @@ export const DashboardComponent = () => {
               placeholder="Paste YouTube link here"
               type="text"
               className="rounded-full border-orange-100 mt-6"
+              onChange={(e) => {
+                setUrl(e.target.value);
+              }}
             />
-            <Button className="bg-orange-950 text-orange-100 w-full mt-2">
+            <Button
+              className="bg-[#031c26] text-orange-100 w-full mt-2"
+              onClick={async () => {
+                try {
+                  await axios.post("/api/streams", {
+                    creatorId: session?.data?.user?.id,
+                    url: url,
+                  });
+                  refreshStreams();
+                } catch (e) {
+                  return JSON.stringify({
+                    error: e,
+                    message: "Error while adding aa stream",
+                  });
+                }
+              }}
+            >
               Add to queue
             </Button>
+          </div>
+          <div className="text-orange-100 font-medium text-2xl mt-6">
+            Now Playing
+          </div>
+          <div>
+            <div className="w-full h-64 bg-[#031c26] mt-2 rounded-2xl"></div>
+            <div className="mt-3">
+              <ShimmerButton shimmerDuration="4s" className="w-full">
+                Play Next
+              </ShimmerButton>
+            </div>
           </div>
         </div>
       </div>
