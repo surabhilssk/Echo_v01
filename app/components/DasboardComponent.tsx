@@ -58,9 +58,12 @@ export const DashboardComponent = () => {
       const response = await axios.get("/api/streams/my", {
         withCredentials: true,
       });
-      const sortedStreams = response.data.streams.sort(
-        (a: any, b: any) => b.upvotes - a.upvotes
-      );
+      const sortedStreams = response.data.streams.sort((a: any, b: any) => {
+        if (a.upvotes !== b.upvotes) {
+          return b.upvotes - a.upvotes;
+        }
+        return a.creatorId - b.creatorId;
+      });
       setStreams(sortedStreams);
       setLoading(false);
     } catch (e) {
