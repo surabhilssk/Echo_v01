@@ -2,6 +2,8 @@ import { prismaClient } from "@/app/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod"
 import { GetVideoDetails } from "youtube-search-api";
+import { getServerSession } from "next-auth";
+import { NEXT_AUTH } from "@/app/lib/auth";
 const YT_REGEX = new RegExp(/^(?:(?:https?:)?\/\/)?(?:www\.)?(?:m\.)?(?:youtu(?:be)?\.com\/(?:v\/|embed\/|watch(?:\/|\?v=))|youtu\.be\/)((?:\w|-){11})(?:\S+)?$/);
 
 const CreateStreamSchema = z.object({
@@ -56,13 +58,47 @@ export async function POST(req: NextRequest){
 
 export async function GET(req: NextRequest){
     const creatorId = req.nextUrl.searchParams.get("creatorId");
-    const streams = await prismaClient.stream.findMany({
-        where: {
-            userId: creatorId ?? undefined
+    const session = await getServerSession(NEXT_AUTH);
+        const user = await prismaClient.user.findFirst({
+            where: {
+                id: session?.user?.id || ""
+            }
+        });
+        if(!user){
+            return NextResponse.json({
+                message: "Unauthenticated"
+            },{
+                status: 403
+            });
         }
-    });
-
+    try{
+        const streams = await prismaClient.stream.findMany({
+            where: {
+                userId: creatorId || ""
+            },
+            include: {
+                _count: {
+                    select: {
+                        upvotes: true
+                    }
+                },
+                upvotes:{
+                    where: {
+                        userId: user.id || ""
+                    }
+                }
+            }
+        });
     return NextResponse.json({
-        streams
-    })
+        streams: streams.map(({_count, ...rest}) => ({
+            ...rest,
+            upvotes: _count.upvotes,
+            haveUpvoted: rest.upvotes.length ? true : false
+        }))
+    });
+    }catch(e){
+        return NextResponse.json({
+            message: "Error while fetching streams"
+        });
+    }
 }
