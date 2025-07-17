@@ -5,11 +5,9 @@ import { Button } from "@/components/ui/stateful-button";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { VideoTile } from "./VideoTile";
-import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 
-export const DashboardComponent = () => {
-  const session = useSession();
+export const DashboardComponent = ({ creatorId }: { creatorId: string }) => {
   const [streams, setStreams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [url, setUrl] = useState("");
@@ -52,7 +50,7 @@ export const DashboardComponent = () => {
   }
 
   async function handleShare() {
-    const shareableUrl = `${window.location.hostname}/creator/${session?.data?.user?.id}`;
+    const shareableUrl = `${window.location.hostname}/creator/${creatorId}`;
     navigator.clipboard.writeText(shareableUrl).then(() => {
       toast.success("Link copied to clipboard", {
         style: {
@@ -71,7 +69,7 @@ export const DashboardComponent = () => {
 
   async function refreshStreams() {
     try {
-      const response = await axios.get("/api/streams/my", {
+      const response = await axios.get(`/api/streams/?creatorId=${creatorId}`, {
         withCredentials: true,
       });
       const sortedStreams = response.data.streams.sort((a: any, b: any) => {
@@ -89,10 +87,11 @@ export const DashboardComponent = () => {
 
   useEffect(() => {
     refreshStreams();
-    console.log(streams);
-    const interval = setInterval(() => {}, 10 * 1000);
+    const interval = setInterval(() => {
+      refreshStreams();
+    }, 20 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [creatorId]);
 
   return (
     <div>
@@ -172,7 +171,7 @@ export const DashboardComponent = () => {
               onClick={async () => {
                 try {
                   await axios.post("/api/streams", {
-                    creatorId: session?.data?.user?.id,
+                    creatorId: creatorId,
                     url: url,
                   });
                   refreshStreams();
