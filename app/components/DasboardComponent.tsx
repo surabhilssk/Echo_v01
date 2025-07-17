@@ -6,8 +6,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { VideoTile } from "./VideoTile";
 import { useSession } from "next-auth/react";
-import { NextResponse } from "next/server";
-import { m } from "motion/react";
+import toast from "react-hot-toast";
 
 export const DashboardComponent = () => {
   const session = useSession();
@@ -41,7 +40,6 @@ export const DashboardComponent = () => {
             : stream
         )
       );
-
       await refreshStreams();
       return JSON.stringify({
         message: "Voting successful",
@@ -51,6 +49,24 @@ export const DashboardComponent = () => {
         message: "Voting failed",
       });
     }
+  }
+
+  async function handleShare() {
+    const shareableUrl = `${window.location.hostname}/creator/${session?.data?.user?.id}`;
+    navigator.clipboard.writeText(shareableUrl).then(() => {
+      toast.success("Link copied to clipboard", {
+        style: {
+          border: "1px solid #713200",
+          borderRadius: "100px",
+          padding: "16px",
+          color: "#713200",
+        },
+        iconTheme: {
+          primary: "#713200",
+          secondary: "#FFFAEE",
+        },
+      });
+    });
   }
 
   async function refreshStreams() {
@@ -125,6 +141,7 @@ export const DashboardComponent = () => {
               shimmerSize="0"
               shimmerDuration="0s"
               className="py-2 text-orange-100 px-3.5"
+              onClick={handleShare}
             >
               <div className="flex">
                 <div className="flex flex-col justify-center">
