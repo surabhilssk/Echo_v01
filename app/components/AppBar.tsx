@@ -11,17 +11,6 @@ export const AppBar = () => {
   const session = useSession();
   const pathname = usePathname();
 
-  useEffect(() => {
-    if (session.status === "authenticated") {
-      router.push("/dashboard");
-    } else if (
-      session.status === "unauthenticated" &&
-      pathname === "/dashboard"
-    ) {
-      router.replace("/");
-    }
-  }, [session.status, router]);
-
   const handleLogout = () => {
     signOut({ redirect: false }).then(() => {
       router.replace("/"); // Redirect immediately after signOut
@@ -76,7 +65,9 @@ export const AppBar = () => {
                 shimmerColor="wheat"
                 shimmerSize="0.08rem"
                 className="text-orange-100"
-                onClick={() => signIn("google")}
+                onClick={() => {
+                  signIn("google");
+                }}
               >
                 <Image
                   src={"/google.png"}
