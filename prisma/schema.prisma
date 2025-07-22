@@ -30,6 +30,7 @@ model Stream {
   title       String
   smallImg    String
   largeImg    String
+  atCreated   DateTime   @default(now())
   active      Boolean    @default(true)
   upvotes     Upvote[]
   userId      String
@@ -41,7 +42,7 @@ model Upvote {
   userId   String
   streamId String
   user     User   @relation(fields: [userId], references: [id])
-  stream   Stream @relation(fields: [streamId], references: [id])
+  stream   Stream @relation(fields: [streamId], references: [id], onDelete: Cascade)
 
   @@unique([userId, streamId])
 }
