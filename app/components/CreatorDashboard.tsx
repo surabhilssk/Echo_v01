@@ -5,5 +5,10 @@ import { DashboardComponent } from "./DasboardComponent";
 
 export const CreatorDashboard = () => {
   const session = useSession();
-  return <DashboardComponent creatorId={session?.data?.user?.id || ""} />;
+  return (
+    <DashboardComponent
+      creatorId={session?.data?.user?.id || ""}
+      playVideo={true}
+    />
+  );
 };

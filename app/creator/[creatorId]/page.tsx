@@ -1,7 +1,7 @@
 import { AppBar } from "@/app/components/AppBar";
 import { DashboardComponent } from "@/app/components/DasboardComponent";
 
-export default async function ({
+export default async function UserComponent({
   params,
 }: {
   params: Promise<{ creatorId: string }>;
@@ -10,7 +10,7 @@ export default async function ({
   return (
     <div>
       <AppBar />
-      <DashboardComponent creatorId={creatorId} />
+      <DashboardComponent creatorId={creatorId} playVideo={false} />
     </div>
   );
 }

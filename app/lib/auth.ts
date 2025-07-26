@@ -19,25 +19,31 @@ export const NEXT_AUTH = {
             clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
         })
     ],
-    secret: "secret",
+    secret: process.env.NEXTAUTH_SECRET,
     callbacks: {
-        async session({session, token, user}: any){
+        async session({session, token}: any){
             // console.log({session})
             // console.log({token})
             session.user.id = token.sub;
             return session;
         },
-        async signIn({user, account, profile}:any){
+        async signIn({user, account}:any){
           if(!user.email){
             return false;
           }
           try{
-            await prismaClient.user.create({
-              data: {
+            await prismaClient.user.upsert({
+              where: {id: account.providerAccountId},
+              create: {
+                id: account.providerAccountId,
                 email: user.email,
                 provider: account.provider,
+              },
+              update: {
+                email: user.email,
               }
-          });}catch(e){
+          });
+      }catch(e){
             console.error(e);
           }
         return true;

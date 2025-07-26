@@ -72,9 +72,10 @@ export async function GET(req: NextRequest){
             });
         }
     try{
-        const streams = await prismaClient.stream.findMany({
+        const [streams, activeStream] = await Promise.all([await prismaClient.stream.findMany({
             where: {
-                userId: creatorId || ""
+                userId: creatorId || "",
+                played: false
             },
             include: {
                 _count: {
@@ -88,17 +89,29 @@ export async function GET(req: NextRequest){
                     }
                 }
             }
-        });
+        }),
+        prismaClient.currentStream.findFirst({
+            where: {
+                userId: creatorId || "",
+            },
+            include:{
+                stream: true
+            }
+        })
+    ]);
     return NextResponse.json({
         streams: streams.map(({_count, ...rest}) => ({
             ...rest,
             upvotes: _count.upvotes,
             haveUpvoted: rest.upvotes.length ? true : false
-        }))
+        })),
+        activeStream
     });
     }catch(e){
         return NextResponse.json({
-            message: "Error while fetching streams"
+            message: "Error while fetching streams",
+            error: e
         });
     }
 }
+

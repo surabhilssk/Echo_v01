@@ -1,5 +1,5 @@
 import { AppBar } from "../components/AppBar";
-import { DashboardComponent } from "../components/DasboardComponent";
+import { CreatorDashboard } from "../components/CreatorDashboard";
 
 export default function DashboardPage() {
   return (
@@ -8,7 +8,7 @@ export default function DashboardPage() {
         <AppBar />
       </div>
       <div>
-        <DashboardComponent />
+        <CreatorDashboard />
       </div>
     </div>
   );

@@ -4,7 +4,6 @@ import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 export const AppBar = () => {
   const router = useRouter();
@@ -13,7 +12,7 @@ export const AppBar = () => {
 
   const handleLogout = () => {
     signOut({ redirect: false }).then(() => {
-      router.replace("/"); // Redirect immediately after signOut
+      router.replace("/");
     });
   };
 

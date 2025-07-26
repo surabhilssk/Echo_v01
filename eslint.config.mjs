@@ -10,7 +10,16 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  {
+    ignores: ['app/generated/**', 'components/ui/stateful-button.tsx'],
+  },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    files: ['**/*.{ts,tsx,js,jsx}'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'warn',
+    }
+  }
 ];
 
 export default eslintConfig;

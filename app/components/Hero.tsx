@@ -2,11 +2,10 @@
 import { LineShadowText } from "@/components/magicui/line-shadow-text";
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { SparklesText } from "@/components/magicui/sparkles-text";
-import { signIn, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export const Hero = () => {
-  const session = useSession();
   const router = useRouter();
   return (
     <>
@@ -50,7 +49,7 @@ export const Hero = () => {
               className="text-orange-100"
               onClick={() => {
                 {
-                  !session.data?.user && signIn("google");
+                  signIn("google");
                 }
               }}
             >
