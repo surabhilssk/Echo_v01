@@ -2,16 +2,27 @@
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/stateful-button";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { VideoTile } from "./VideoTile";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
+import YouTubeIFrameCtrl from "youtube-iframe-ctrl";
 
-export const DashboardComponent = ({ creatorId }: { creatorId: string }) => {
+export const DashboardComponent = ({
+  creatorId,
+  playVideo,
+}: {
+  creatorId: string;
+  playVideo: boolean;
+}) => {
   const [streams, setStreams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pnLoading, setPnLoading] = useState(false);
+  const [currentVideo, setCurrentVideo] = useState<any>(null);
   const [url, setUrl] = useState("");
+  const videoPlayerRef = useRef(null);
   const session = useSession();
 
   async function handleVote(streamId: string) {
@@ -47,6 +58,7 @@ export const DashboardComponent = ({ creatorId }: { creatorId: string }) => {
     } catch (e) {
       return JSON.stringify({
         message: "Voting failed",
+        error: e,
       });
     }
   }
@@ -78,14 +90,89 @@ export const DashboardComponent = ({ creatorId }: { creatorId: string }) => {
         if (a.upvotes !== b.upvotes) {
           return b.upvotes - a.upvotes;
         }
-        return a.creatorId - b.creatorId;
+        return (
+          new Date(a.atCreated).getTime() - new Date(b.atCreated).getTime()
+        );
       });
       setStreams(sortedStreams);
+      setCurrentVideo((video: any) => {
+        const newVideo = response.data.activeStream?.stream;
+        if (!newVideo) return video;
+        if (video?.id === newVideo.id) {
+          return video;
+        }
+        return response.data.activeStream.stream;
+      });
       setLoading(false);
     } catch (e) {
       console.log("Error fetching streams");
+      console.error(e);
     }
   }
+
+  async function playNext() {
+    try {
+      setPnLoading(true);
+      const videoContent = await axios.get("api/streams/next");
+      setCurrentVideo(videoContent.data.stream);
+      setPnLoading(false);
+      refreshStreams();
+    } catch (e) {
+      setPnLoading(false);
+      toast("No more songs to play", {
+        style: {
+          border: "1px solid #713200",
+          borderRadius: "100px",
+          padding: "16px",
+          color: "#713200",
+        },
+        iconTheme: {
+          primary: "#713200",
+          secondary: "#FFFAEE",
+        },
+      });
+      console.log(e);
+    }
+  }
+
+  useEffect(() => {
+    const iframeElement = document.getElementById("youtube-player");
+    if (iframeElement && iframeElement instanceof HTMLIFrameElement) {
+      const youTubeIFrameCtrl = new YouTubeIFrameCtrl(iframeElement);
+
+      async function play() {
+        await youTubeIFrameCtrl.play();
+      }
+      play();
+      const handleStateChange = (event: any) => {
+        if (event.detail === "ENDED") {
+          const upcomingStreams = streams.filter(
+            (stream) => stream.id !== currentVideo?.id
+          );
+          if (upcomingStreams.length > 0) {
+            playNext();
+          } else {
+            toast("No more songs to play", {
+              style: {
+                border: "1px solid #713200",
+                borderRadius: "100px",
+                padding: "16px",
+                color: "#713200",
+              },
+              iconTheme: {
+                primary: "#713200",
+                secondary: "#FFFAEE",
+              },
+            });
+          }
+        }
+      };
+      iframeElement.addEventListener("ytstatechange", handleStateChange);
+      return () => {
+        iframeElement.removeEventListener("ytstatechange", handleStateChange);
+      };
+    }
+  }, [currentVideo, videoPlayerRef]);
 
   useEffect(() => {
     refreshStreams();
@@ -97,9 +184,9 @@ export const DashboardComponent = ({ creatorId }: { creatorId: string }) => {
 
   return (
     <div>
-      <div className="grid grid-cols-2 gap-4 h-screen pt-28">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-screen pt-28">
         <div className="ml-28 mb-4">
-          <div className="text-2xl font-medium text-orange-100">
+          <div className="text-xl font-medium text-orange-100">
             Upcoming Songs
           </div>
           <div className="max-h-[500px] overflow-y-auto hide-scrollbar">
@@ -192,17 +279,50 @@ export const DashboardComponent = ({ creatorId }: { creatorId: string }) => {
             Now Playing
           </div>
           <div>
-            <div className="w-full h-64 bg-[#031c26] mt-2 rounded-2xl"></div>
+            <div className="w-full h-64 mt-2 rounded-2xl">
+              {currentVideo ? (
+                <div>
+                  {playVideo ? (
+                    <div ref={videoPlayerRef}>
+                      <iframe
+                        id="youtube-player"
+                        width={"100%"}
+                        height={250}
+                        src={`https://www.youtube.com/embed/${currentVideo.extractedId}?enablejsapi=1`}
+                      ></iframe>
+                    </div>
+                  ) : (
+                    <div>
+                      <Image
+                        src={currentVideo.largeImg}
+                        alt="Thumbnail"
+                        width={500}
+                        height={225}
+                        className="rounded-2xl"
+                      />
+                      <p className="text-center text-orange-100 mt-2">
+                        {currentVideo.title}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex justify-center flex-col text-xl text-orange-100 opacity-50 w-full h-64 rounded-2xl text-center bg-[#031c26]">
+                  No video is playing
+                </div>
+              )}
+            </div>
             <div className="mt-3">
               <ShimmerButton
                 shimmerDuration="4s"
-                className={`w-full ${
+                className={`w-full text-orange-100 ${
                   session?.data?.user?.id === creatorId
                     ? "visible"
                     : "invisible"
                 }`}
+                onClick={playNext}
               >
-                Play Next
+                {pnLoading ? "Loading..." : "Play Next"}
               </ShimmerButton>
             </div>
           </div>
