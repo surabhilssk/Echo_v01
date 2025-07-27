@@ -25,7 +25,7 @@ export const VideoTile = ({
             src={thumbnail}
             alt="Thumbnail"
             width={170}
-            height={170}
+            height={130}
             className="rounded-md"
           />
         </div>

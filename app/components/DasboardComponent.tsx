@@ -205,7 +205,7 @@ export const DashboardComponent = ({
                           ? stream.title.slice(0, 32) + "..."
                           : stream.title
                       }
-                      thumbnail={stream.largeImg}
+                      thumbnail={stream.smallImg}
                       votes={stream.upvotes}
                       onClick={() => handleVote(stream.id)}
                       haveUpvoted={stream.haveUpvoted}
@@ -294,11 +294,11 @@ export const DashboardComponent = ({
                   ) : (
                     <div>
                       <Image
-                        src={currentVideo.largeImg}
+                        src={currentVideo.smallImg}
                         alt="Thumbnail"
-                        width={500}
-                        height={225}
-                        className="rounded-2xl"
+                        width={100}
+                        height={90}
+                        className="rounded-2xl w-full"
                       />
                       <p className="text-center text-orange-100 mt-2">
                         {currentVideo.title}
