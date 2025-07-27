@@ -49,7 +49,7 @@ export async function POST(req: NextRequest){
         console.log(e);
         return NextResponse.json({
             message: "Error while adding a stream",
-            error: e
+            error: {e}
         },{
             status: 411
         })
