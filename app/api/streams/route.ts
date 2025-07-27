@@ -1,23 +1,36 @@
 import { prismaClient } from "@/app/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod"
-// import { GetVideoDetails } from "youtube-search-api";
+import axios from "axios";
 import { getServerSession } from "next-auth";
 import { NEXT_AUTH } from "@/app/lib/auth";
-import Youtube from "youtube-sr";
-// const YT_REGEX = new RegExp(/^(?:(?:https?:)?\/\/)?(?:www\.)?(?:m\.)?(?:youtu(?:be)?\.com\/(?:v\/|embed\/|watch(?:\/|\?v=))|youtu\.be\/)((?:\w|-){11})(?:\S+)?$/);
+import Youtube, { Thumbnail } from "youtube-sr";
+const YT_REGEX = new RegExp(/^(?:(?:https?:)?\/\/)?(?:www\.)?(?:m\.)?(?:youtu(?:be)?\.com\/(?:v\/|embed\/|watch(?:\/|\?v=))|youtu\.be\/)((?:\w|-){11})(?:\S+)?$/);
 
 const CreateStreamSchema = z.object({
     creatorId: z.string(),
     url: z.string(),
 })
 
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+
+async function getVideoDetails(videoId: string){
+    const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${YOUTUBE_API_KEY}`;
+    const res = await axios.get(url);
+    if(res.data.items.length === 0) return null;
+    const snippet = res.data.items[0].snippet;
+    return {
+        title: snippet.title || "Unknown Title",
+        largeThumbnail: snippet.thumbnails?.high.url,
+        smallThumbnail: snippet.thumbnails?.medium.url,
+    }
+}
+
 export async function POST(req: NextRequest){
     try{
         const data = CreateStreamSchema.parse(await req.json());
-        // const isYt = YT_REGEX.test(data.url);
-        const ytUrl = data.url;
-        if(!ytUrl){
+        const isYt = YT_REGEX.test(data.url);
+        if(!isYt){
             return NextResponse.json({
                 message: "Wrong url format"
             },{
@@ -26,12 +39,20 @@ export async function POST(req: NextRequest){
         }
 
         const extractedId = data.url.split("v=")[1];
+        if(!extractedId){
+            return NextResponse.json({
+                message: "Invalid YouTube URL"
+            },{
+                status: 400
+            });
+        }
         let videoDetails = null
-        let thumbnail = null;
+        let smallThumbnail = null;
+        let largeThumbnail = null;
         try{
-            videoDetails = await Youtube.getVideo(ytUrl);
-            thumbnail = videoDetails.thumbnail?.url;
-            console.log(thumbnail);
+            videoDetails = await getVideoDetails(extractedId);
+            smallThumbnail = videoDetails?.smallThumbnail;
+            largeThumbnail = videoDetails?.largeThumbnail;
         }catch(e){
             console.log("Failed to fetch video details", e);
         }
@@ -55,8 +76,8 @@ export async function POST(req: NextRequest){
                 extractedId: extractedId,
                 type: "Youtube",
                 title: videoDetails.title || "Unknown Title",
-                smallImg: thumbnail || "https://www.billboard.com/wp-content/uploads/2023/07/SZA-SOS-album-art-billboard-1240.jpg?w=500",
-                largeImg: thumbnail || "https://www.billboard.com/wp-content/uploads/2023/07/SZA-SOS-album-art-billboard-1240.jpg?w=500",
+                smallImg: smallThumbnail || "https://www.billboard.com/wp-content/uploads/2023/07/SZA-SOS-album-art-billboard-1240.jpg?w=500",
+                largeImg: largeThumbnail || "https://www.billboard.com/wp-content/uploads/2023/07/SZA-SOS-album-art-billboard-1240.jpg?w=500",
             }
         })
         return NextResponse.json({
