@@ -37,7 +37,17 @@ export async function POST(req: NextRequest){
             });
         }
 
-        const extractedId = data.url.split("v=")[1];
+        let extractedId = null;
+        if(isYt){
+            if(data.url.includes("youtu.be")){
+                extractedId = data.url.split("?")[0].split("e/")[1];
+            }else if(data.url.includes("watch?v") && data.url.includes("&t=")){
+                extractedId = data.url.split("v=")[1].split("&t=")[0];
+            }else{
+                extractedId = data.url.split("v=")[1];
+            }
+        }
+
         if(!extractedId){
             return NextResponse.json({
                 message: "Invalid YouTube URL"
