@@ -28,6 +28,7 @@
     "youtube-iframe-ctrl": "^1.0.3",
     "youtube-player": "^5.6.0",
     "youtube-search-api": "^2.0.0",
+    "youtube-sr": "^4.3.12",
     "zod": "^3.25.75"
   },
   "devDependencies": {

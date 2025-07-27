@@ -1,10 +1,11 @@
 import { prismaClient } from "@/app/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod"
-import { GetVideoDetails } from "youtube-search-api";
+// import { GetVideoDetails } from "youtube-search-api";
 import { getServerSession } from "next-auth";
 import { NEXT_AUTH } from "@/app/lib/auth";
-const YT_REGEX = new RegExp(/^(?:(?:https?:)?\/\/)?(?:www\.)?(?:m\.)?(?:youtu(?:be)?\.com\/(?:v\/|embed\/|watch(?:\/|\?v=))|youtu\.be\/)((?:\w|-){11})(?:\S+)?$/);
+import Youtube from "youtube-sr";
+// const YT_REGEX = new RegExp(/^(?:(?:https?:)?\/\/)?(?:www\.)?(?:m\.)?(?:youtu(?:be)?\.com\/(?:v\/|embed\/|watch(?:\/|\?v=))|youtu\.be\/)((?:\w|-){11})(?:\S+)?$/);
 
 const CreateStreamSchema = z.object({
     creatorId: z.string(),
@@ -14,8 +15,9 @@ const CreateStreamSchema = z.object({
 export async function POST(req: NextRequest){
     try{
         const data = CreateStreamSchema.parse(await req.json());
-        const isYt = YT_REGEX.test(data.url);
-        if(!isYt){
+        // const isYt = YT_REGEX.test(data.url);
+        const ytUrl = data.url;
+        if(!ytUrl){
             return NextResponse.json({
                 message: "Wrong url format"
             },{
@@ -24,10 +26,12 @@ export async function POST(req: NextRequest){
         }
 
         const extractedId = data.url.split("v=")[1];
-        const videoDetails = await GetVideoDetails(extractedId);
-        const thumbnails = videoDetails.thumbnail.thumbnails;
-        console.log(thumbnails);
-        thumbnails.sort((a: {width: number}, b: {width: number}) =>  a.width < b.width ? 1 : -1);
+        const videoDetails = await Youtube.getVideo(ytUrl);
+        const thumbnail = videoDetails.thumbnail?.url;
+        console.log(thumbnail);
+        // const thumbnails = videoDetails.thumbnail.thumbnails;
+        // console.log(thumbnails);
+        // thumbnails.sort((a: {width: number}, b: {width: number}) =>  a.width < b.width ? 1 : -1);
 
 
         const stream = await prismaClient.stream.create({
@@ -37,8 +41,8 @@ export async function POST(req: NextRequest){
                 extractedId: extractedId,
                 type: "Youtube",
                 title: videoDetails.title || "Unknown Title",
-                smallImg: thumbnails[thumbnails.length - 1].url || "https://www.billboard.com/wp-content/uploads/2023/07/SZA-SOS-album-art-billboard-1240.jpg?w=800",
-                largeImg: thumbnails[thumbnails.length - 2].url || "https://www.billboard.com/wp-content/uploads/2023/07/SZA-SOS-album-art-billboard-1240.jpg?w=800",
+                smallImg: thumbnail || "https://www.billboard.com/wp-content/uploads/2023/07/SZA-SOS-album-art-billboard-1240.jpg?w=500",
+                largeImg: thumbnail || "https://www.billboard.com/wp-content/uploads/2023/07/SZA-SOS-album-art-billboard-1240.jpg?w=500",
             }
         })
         return NextResponse.json({
@@ -49,7 +53,7 @@ export async function POST(req: NextRequest){
         console.log(e);
         return NextResponse.json({
             message: "Error while adding a stream",
-            error: {e}
+            error: e instanceof Error? e.message : e
         },{
             status: 411
         })
