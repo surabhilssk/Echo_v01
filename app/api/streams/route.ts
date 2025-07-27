@@ -4,7 +4,6 @@ import { z } from "zod"
 import axios from "axios";
 import { getServerSession } from "next-auth";
 import { NEXT_AUTH } from "@/app/lib/auth";
-import Youtube, { Thumbnail } from "youtube-sr";
 const YT_REGEX = new RegExp(/^(?:(?:https?:)?\/\/)?(?:www\.)?(?:m\.)?(?:youtu(?:be)?\.com\/(?:v\/|embed\/|watch(?:\/|\?v=))|youtu\.be\/)((?:\w|-){11})(?:\S+)?$/);
 
 const CreateStreamSchema = z.object({
