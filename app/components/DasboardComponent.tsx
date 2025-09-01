@@ -184,18 +184,18 @@ export const DashboardComponent = ({
 
   return (
     <div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-screen pt-28">
-        <div className="ml-28 mb-4">
-          <div className="text-xl font-medium text-orange-100">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4 h-screen pt-28">
+        <div className="order-1 sm:order-0 ml-3 md:ml-16 lg:ml-28 mb-4">
+          <div className="mt-4 md:mt-2 lg:mt-0 text-xl font-medium text-orange-100">
             Upcoming Songs
           </div>
           <div className="max-h-[500px] overflow-y-auto hide-scrollbar">
             {loading === true ? (
-              <div className="text-orange-200 font-medium text-xl text-center mt-56">
+              <div className="text-orange-200 font-medium text-xl text-center mt-8 sm:mt-56">
                 Loading...
               </div>
             ) : (
-              <div>
+              <div className="space-y-4 mt-2">
                 {streams.length > 0 ? (
                   streams.map((stream: any) => (
                     <VideoTile
@@ -212,7 +212,7 @@ export const DashboardComponent = ({
                     />
                   ))
                 ) : (
-                  <div className="text-orange-200 font-medium text-xl text-center mt-56">
+                  <div className="text-orange-200 font-medium text-xl text-center mt-8 sm:mt-56">
                     No upcoming songs
                   </div>
                 )}
@@ -220,15 +220,15 @@ export const DashboardComponent = ({
             )}
           </div>
         </div>
-        <div className="mr-48">
+        <div className="mx-4 md:mr-20 lg:mr-48">
           <div className="flex justify-between">
-            <div className="flex flex-col justify-center text-xl text-orange-100">
+            <div className="flex flex-col justify-end md:justify-center text-xl text-orange-100">
               Add a song
             </div>
             <ShimmerButton
               shimmerSize="0"
               shimmerDuration="0s"
-              className="py-2 text-orange-100 px-3.5"
+              className="py-1.5 sm:py-2 text-orange-100 px-3.5"
               onClick={handleShare}
             >
               <div className="flex">
@@ -250,7 +250,7 @@ export const DashboardComponent = ({
             <Input
               placeholder="Paste YouTube link here"
               type="text"
-              className="rounded-full border-orange-100 mt-6"
+              className="rounded-full border-orange-100 mt-6 text-orange-100/90"
               onChange={(e) => {
                 setUrl(e.target.value);
               }}
@@ -275,7 +275,7 @@ export const DashboardComponent = ({
               Add to queue
             </Button>
           </div>
-          <div className="text-orange-100 font-medium text-2xl mt-6">
+          <div className="text-orange-100 font-medium text-xl lg:text-2xl mt-6">
             Now Playing
           </div>
           <div>

@@ -26,7 +26,7 @@ export const AppBar = () => {
               alt="Echo Logo"
               width={50}
               height={50}
-              className="w-10 h-10 sm:w-14 sm:h-14"
+              className="w-8 h-8 md:w-10 md:h-10 sm:w-14 sm:h-14"
             />
           </div>
           <div className="flex flex-col justify-center font-bold text-2xl sm:text-3xl text-orange-100">
@@ -53,7 +53,7 @@ export const AppBar = () => {
               <ShimmerButton
                 shimmerColor="wheat"
                 shimmerSize="0rem"
-                className="text-orange-100"
+                className="py-1.5 md:py-2 text-orange-100 px-2 md:px-3.5"
                 onClick={handleLogout}
               >
                 Logout
