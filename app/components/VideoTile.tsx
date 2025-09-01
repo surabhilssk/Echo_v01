@@ -18,8 +18,8 @@ export const VideoTile = ({
   haveUpvoted,
 }: VideoTitleProps) => {
   return (
-    <div className="h-28 mr-9 rounded-md bg-[#031c26] mt-3">
-      <div className="p-2 flex gap-3">
+    <div className="h-28 mr-3 sm:mr-9 rounded-md bg-[#031c26]">
+      <div className="h-full flex gap-3 items-center px-2">
         <div>
           <Image
             src={thumbnail}
@@ -29,8 +29,10 @@ export const VideoTile = ({
             className="rounded-md"
           />
         </div>
-        <div className="mt-3">
-          <div className="text-lg font-medium text-orange-100">{title}</div>
+        <div>
+          <div className="text-base lg:text-lg font-medium text-orange-100">
+            {title}
+          </div>
           <div className="flex">
             <div className="mt-2">
               {haveUpvoted === false ? (
